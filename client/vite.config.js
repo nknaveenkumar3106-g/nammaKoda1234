@@ -7,7 +7,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://namma-koda1234-qk8v.vercel.app/',
         changeOrigin: true,
         ws: true,
         secure: false
