@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import 'express-async-errors';
 
 import authRouter from './routes/auth.js';
 import walletRouter from './routes/wallet.js';
@@ -44,8 +45,8 @@ mongoose
     console.log('MongoDB connected');
   })
   .catch((err) => {
-    console.error('Mongo connection error:', err);
-    process.exit(1);
+    // Do not exit on serverless; let requests return 503 via readiness gate
+    console.error('Mongo connection error (continuing to serve 503):', err.message);
   });
 
 // Gate requests until Mongo connection is ready
