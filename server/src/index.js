@@ -18,26 +18,14 @@ const app = express();
 // Fail fast instead of buffering DB ops while disconnected
 mongoose.set('bufferCommands', false);
 
-// Configurable CORS to allow local dev and deployed clients
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // allow non-browser or same-origin requests
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
+// Open CORS to all origins for all routes and responses
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   optionsSuccessStatus: 204
-};
-
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+}));
+app.options('*', cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -64,11 +52,8 @@ mongoose
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     // Ensure CORS headers are present even on errors
-    if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-      res.setHeader('Vary', 'Origin');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-    }
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Vary', 'Origin');
     return res.status(503).json({ error: 'Database not connected' });
   }
   next();
@@ -76,11 +61,8 @@ app.use((req, res, next) => {
 
 // Global error handler that preserves CORS headers
 app.use((err, req, res, next) => {
-  if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Vary', 'Origin');
   const status = err.status || 500;
   res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
