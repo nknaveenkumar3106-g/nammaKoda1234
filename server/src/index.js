@@ -37,8 +37,14 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 app.use(morgan('dev'));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/namma_kodai';
+const isVercel = !!process.env.VERCEL;
+const MONGO_URI = process.env.MONGO_URI || (isVercel ? '' : 'mongodb://127.0.0.1:27017/namma_kodai');
 const PORT = process.env.PORT || 5001;
+
+if (isVercel && (!process.env.MONGO_URI || /localhost|127\.0\.0\.1/.test(process.env.MONGO_URI))) {
+  console.error('Missing or invalid MONGO_URI for production. Set a remote MongoDB connection string in Vercel env vars.');
+  process.exit(1);
+}
 
 mongoose
   .connect(MONGO_URI)
