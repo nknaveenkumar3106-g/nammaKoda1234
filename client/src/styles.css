@@ -1,0 +1,300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+html, body { overflow-x: hidden; }
+
+/* Rain animation */
+.rain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.raindrop {
+  position: absolute;
+  top: -10%;
+  width: 2px;
+  height: 14px;
+  background: rgba(59,130,246,0.6);
+  filter: blur(0.5px);
+  animation: fall 1.2s linear infinite;
+}
+.raindrop:nth-child(odd){
+  background: rgba(99,102,241,0.55);
+}
+@keyframes fall {
+  to { transform: translateY(120vh); }
+}
+/* distribute drops using CSS variables */
+.rain .raindrop { left: calc(var(--i) * 1%); animation-delay: calc(var(--i) * -0.05s); }
+
+/* Glossy look */
+.bg-gradient-nk { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(236,72,153,0.15)); }
+
+/* Hero rainy + smog effect */
+.hero-rain-smog {
+  position: relative;
+  background: radial-gradient(1200px 400px at 50% 0%, rgba(255,255,255,0.35), rgba(255,255,255,0)) , linear-gradient(135deg, rgba(59,130,246,0.12), rgba(236,72,153,0.12));
+}
+.hero-rain-smog::before {
+  /* smog layer */
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(600px 200px at 30% 10%, rgba(255,255,255,0.25), transparent), radial-gradient(800px 250px at 70% 10%, rgba(255,255,255,0.22), transparent);
+  filter: blur(18px);
+  pointer-events: none;
+}
+.hero-rain-smog::after {
+  /* fine rain grain overlay */
+  content: '';
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 100% 3px;
+  animation: drift 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes drift { from { transform: translateY(0); } to { transform: translateY(3px); } }
+
+/* Global weather backgrounds */
+.bg-weather-rain {
+  background: linear-gradient(180deg, rgba(30,58,138,0.7), rgba(30,58,138,0.5));
+}
+.bg-weather-rain::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none;
+  background: transparent;
+}
+.bg-weather-sun {
+  background: radial-gradient(800px 300px at 80% -50px, rgba(253,224,71,0.35), transparent), linear-gradient(180deg, rgba(251,191,36,0.15), rgba(59,130,246,0.05));
+}
+.bg-weather-cloudy {
+  background: linear-gradient(180deg, rgba(148,163,184,0.25), rgba(241,245,249,0.4));
+}
+
+/* Temperature-based hero backgrounds */
+.hero-hot {
+  position: relative;
+  background: radial-gradient(900px 320px at 70% -80px, rgba(253,224,71,0.45), transparent), linear-gradient(135deg, rgba(244,114,182,0.18), rgba(251,191,36,0.15));
+}
+.hero-hot::before{
+  /* sun core */
+  content: '';
+  position: absolute; top: -120px; right: -80px; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgba(253,224,71,0.9), rgba(253,224,71,0.3));
+  filter: blur(2px);
+  animation: sunPulse 5s ease-in-out infinite;
+  pointer-events: none;
+}
+.hero-hot::after{
+  /* rotating rays */
+  content: '';
+  position: absolute; top: -180px; right: -140px; width: 420px; height: 420px; border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(253,224,71,0.25) 0deg, transparent 20deg, rgba(253,224,71,0.2) 40deg, transparent 60deg, rgba(253,224,71,0.15) 80deg, transparent 100deg);
+  animation: sunSpin 30s linear infinite;
+  pointer-events: none;
+}
+@keyframes sunSpin { from { transform: rotate(0deg); } to { transform: rotate(0deg); } }
+@keyframes sunPulse { 0%,100% { transform: scale(1); opacity: .95;} 50% { transform: scale(1.02); opacity: 1; } }
+.hero-mild {
+  position: relative;
+  background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(236,72,153,0.12));
+}
+.hero-cool {
+  position: relative;
+  background: linear-gradient(135deg, rgba(14,165,233,0.20), rgba(99,102,241,0.15));
+}
+.hero-cool::before {
+  /* subtle mist */
+  content: '';
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(600px 220px at 30% 0%, rgba(255,255,255,0.22), transparent), radial-gradient(800px 260px at 70% 0%, rgba(255,255,255,0.2), transparent);
+  filter: blur(14px);
+  animation: mistDrift 20s linear infinite;
+}
+@keyframes mistDrift { 0% { transform: translateX(0);} 50% { transform: translateX(-5px);} 100% { transform: translateX(0);} }
+
+/* Glossier card */
+.glass-strong {
+  background: rgba(255,255,255,0.32);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.45);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+}
+
+.glass-card { @apply card bg-base-100 shadow-xl; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.5); backdrop-filter: blur(10px); }
+
+/* Desktop layout helpers */
+.home-grid { display: grid; gap: 1rem; }
+@media (min-width: 768px){ .home-grid { grid-template-columns: 1.1fr 1fr; gap: 1.5rem; } }
+.glass {
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.float-soft {
+  animation: floatSoft 4s ease-in-out infinite;
+}
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Logo shine animation */
+.logo-animated { position: relative; display: inline-block; overflow: hidden; border-radius: 6px; }
+.logo-shine {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.6) 45%, transparent 90%);
+  transform: translateX(-100%);
+  animation: shineSweep 4s ease-in-out infinite;
+}
+@keyframes shineSweep { 0% { transform: translateX(-100%);} 60% { transform: translateX(100%);} 100% { transform: translateX(100%);} }
+
+/* Landing animations */
+.animate-fade-in{animation:fade-in .8s ease both}
+.animate-rise{animation:rise .7s ease both}
+.animate-fall{animation:fallBg linear infinite}
+.animate-float-slow{animation:float 14s ease-in-out infinite}
+.animate-float-slower{animation:float 18s ease-in-out infinite}
+.delay-150{animation-delay:.15s}
+.delay-300{animation-delay:.3s}
+.delay-500{animation-delay:.5s}
+@keyframes fade-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes fallBg{0%{transform:translateY(-10%)}100%{transform:translateY(110%)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+/* Hero background umbrella icon */
+.umbrella-bg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0.08;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+  animation: sway 8s ease-in-out infinite;
+}
+@keyframes sway { 0%,100% { transform: rotate(-1deg) translateY(0);} 50% { transform: rotate(1deg) translateY(-2px);} }
+
+/* Icon glow for hero icons */
+.icon-glow { filter: drop-shadow(0 2px 6px rgba(255,255,255,0.45)) drop-shadow(0 6px 14px rgba(0,0,0,0.25)); }
+
+/* Magical text animation */
+.magical-text {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  white-space: nowrap;
+  animation: textGlow 3s ease-in-out infinite alternate;
+  background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(139,92,246,0.8));
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.magical-text.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.magical-text.submitted {
+  transform: translateX(0);
+  opacity: 1;
+  animation: textSuccess 1s ease-in-out;
+}
+
+@keyframes textGlow {
+  0% {
+    background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(139,92,246,0.8));
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  100% {
+    background: linear-gradient(135deg, rgba(139,92,246,0.9), rgba(168,85,247,0.9));
+    box-shadow: 0 6px 20px rgba(139,92,246,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+}
+
+@keyframes textSuccess {
+  0% {
+    transform: scale(1);
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(139,92,246,0.8));
+  }
+  50% {
+    transform: scale(1.05);
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(16,185,129,0.9), rgba(34,197,94,0.9));
+  }
+  100% {
+    transform: scale(1);
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(16,185,129,0.9), rgba(34,197,94,0.9));
+  }
+}
+
+@media (min-width: 640px) {
+  .magical-text {
+    font-size: 1rem;
+    padding: 12px 24px;
+  }
+}
+
+/* Weather-based color variations */
+.hero-hot .magical-text {
+  background: linear-gradient(135deg, rgba(251,191,36,0.8), rgba(245,158,11,0.8));
+  box-shadow: 0 4px 15px rgba(251,191,36,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.hero-hot .magical-text.show {
+  animation: textGlowHot 3s ease-in-out infinite alternate;
+}
+
+.hero-cool .magical-text {
+  background: linear-gradient(135deg, rgba(14,165,233,0.8), rgba(59,130,246,0.8));
+  box-shadow: 0 4px 15px rgba(14,165,233,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.hero-cool .magical-text.show {
+  animation: textGlowCool 3s ease-in-out infinite alternate;
+}
+
+.hero-mild .magical-text {
+  background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(139,92,246,0.8));
+  box-shadow: 0 4px 15px rgba(99,102,241,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+@keyframes textGlowHot {
+  0% {
+    background: linear-gradient(135deg, rgba(251,191,36,0.8), rgba(245,158,11,0.8));
+    box-shadow: 0 4px 15px rgba(251,191,36,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  100% {
+    background: linear-gradient(135deg, rgba(245,158,11,0.9), rgba(217,119,6,0.9));
+    box-shadow: 0 6px 20px rgba(245,158,11,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+}
+
+@keyframes textGlowCool {
+  0% {
+    background: linear-gradient(135deg, rgba(14,165,233,0.8), rgba(59,130,246,0.8));
+    box-shadow: 0 4px 15px rgba(14,165,233,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  100% {
+    background: linear-gradient(135deg, rgba(59,130,246,0.9), rgba(37,99,235,0.9));
+    box-shadow: 0 6px 20px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+}
+
+
+
