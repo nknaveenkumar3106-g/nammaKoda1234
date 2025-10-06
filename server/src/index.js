@@ -32,7 +32,8 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -62,9 +63,26 @@ mongoose
 // Gate requests until Mongo connection is ready
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
+    // Ensure CORS headers are present even on errors
+    if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
     return res.status(503).json({ error: 'Database not connected' });
   }
   next();
+});
+
+// Global error handler that preserves CORS headers
+app.use((err, req, res, next) => {
+  if (req.headers.origin && allowedOrigins.includes(req.headers.origin)) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  const status = err.status || 500;
+  res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
 
 app.get('/api/health', (req, res) => {
