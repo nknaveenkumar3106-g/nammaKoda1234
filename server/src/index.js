@@ -15,6 +15,9 @@ dotenv.config();
 
 const app = express();
 
+// Fail fast instead of buffering DB ops while disconnected
+mongoose.set('bufferCommands', false);
+
 // Configurable CORS to allow local dev and deployed clients
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
   .split(',')
@@ -55,6 +58,14 @@ mongoose
     console.error('Mongo connection error:', err);
     process.exit(1);
   });
+
+// Gate requests until Mongo connection is ready
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ error: 'Database not connected' });
+  }
+  next();
+});
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
