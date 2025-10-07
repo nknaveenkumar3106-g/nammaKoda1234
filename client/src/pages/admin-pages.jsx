@@ -1054,33 +1054,7 @@ export function Inventory(){
         </dialog>
       )}
 
-      {/* Real-time Transaction Feed for Users */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RealtimeTransactionFeed maxItems={10} showUserInfo={true} />
-        <div className="card bg-base-100 shadow">
-          <div className="card-body">
-            <h3 className="card-title text-lg mb-4">User Activity Summary</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-primary/10 rounded-lg">
-                <span className="text-primary font-medium">Total Users</span>
-                <span className="text-primary font-bold">{userStats.total || users.length}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-success/10 rounded-lg">
-                <span className="text-success font-medium">Active Users</span>
-                <span className="text-success font-bold">{userStats.active || users.filter(u => u.status === 'active').length}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-info/10 rounded-lg">
-                <span className="text-info font-medium">New Users</span>
-                <span className="text-info font-bold">{userStats.newUsers || 0}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-warning/10 rounded-lg">
-                <span className="text-warning font-medium">Explorers</span>
-                <span className="text-warning font-bold">{userStats.explorers || 0}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* (removed erroneous user summary block from Inventory) */}
     </div>
   )
 }
