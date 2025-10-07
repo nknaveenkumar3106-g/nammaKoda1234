@@ -136,3 +136,4 @@ export default function RealtimeTransactionFeed({ maxItems = 10, showUserInfo = 
     </div>
   );
 }
+
