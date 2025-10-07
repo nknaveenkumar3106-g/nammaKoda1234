@@ -83,8 +83,8 @@ export default function LineChart({ data, title, height = 300 }) {
   return (
     <div className="card bg-base-100 shadow-lg">
       <div className="card-body">
-        <h3 className="card-title text-lg mb-4">{title}</h3>
-        <div style={{ height: `${height}px` }}>
+        <h3 className="card-title text-lg mb-4 truncate">{title}</h3>
+        <div className="w-full" style={{ height: `${height}px` }}>
           <Line data={data} options={options} />
         </div>
       </div>

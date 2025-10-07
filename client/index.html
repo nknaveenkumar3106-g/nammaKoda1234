@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/fevicon.png" />
     <title>nammaKoda</title>
+    <meta name="description" content="NammaKoda - Smart umbrella sharing system. Borrow, return, and stay rain-ready." />
+    <meta name="keywords" content="NammaKoda, umbrella sharing, campus umbrellas, borrow umbrellas, rain ready" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta property="og:title" content="NammaKoda - Umbrella Sharing System" />
+    <meta property="og:description" content="Borrow umbrellas across campus. Simple, convenient, and weather-ready." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="NammaKoda - Umbrella Sharing System" />
+    <meta name="twitter:description" content="Borrow umbrellas across campus. Simple, convenient, and weather-ready." />
     <script>
       (function(){
         try{
@@ -16,6 +26,33 @@
   </head>
   <body>
     <div id="root"></div>
+    <style>
+      @keyframes raindrop { to { transform: translateY(110vh); opacity: 0.1; } }
+      .rain-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+      .rain-drop { position: absolute; top: -10vh; width: 1px; height: 60px; background: linear-gradient(180deg, rgba(59,130,246,0.4), rgba(59,130,246,0)); filter: blur(0.3px); animation: raindrop linear infinite; }
+      @media (min-width: 768px){ .rain-drop{ height: 80px } }
+    </style>
+    <script>
+      (function(){
+        try{
+          const path = location.pathname
+          if(path === '/' || path === '/intro'){
+            const overlay = document.createElement('div');
+            overlay.className = 'rain-overlay';
+            const count = 40;
+            for(let i=0;i<count;i++){
+              const d = document.createElement('div');
+              d.className = 'rain-drop';
+              d.style.left = Math.round(Math.random()*100)+'%';
+              d.style.animationDuration = (1.5 + Math.random()*1.5)+'s';
+              d.style.animationDelay = (Math.random()*2)+'s';
+              overlay.appendChild(d);
+            }
+            document.body.appendChild(overlay);
+          }
+        }catch(e){}
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
   </html>

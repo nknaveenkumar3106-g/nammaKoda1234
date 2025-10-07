@@ -776,6 +776,7 @@ export function Stations(){
 }
 
 export function Inventory(){
+  // Local data; ensure stable initial render to avoid blink
   const [umbrellas, setUmbrellas] = useState([
     { id: 'UMB001', qrCode: 'QR001', station: 'Main Gate', status: 'available', condition: 'good', lastMaintenance: '2024-09-15', borrowCount: 45, adRevenue: 120 },
     { id: 'UMB002', qrCode: 'QR002', station: 'Library Block', status: 'borrowed', condition: 'good', lastMaintenance: '2024-09-10', borrowCount: 32, adRevenue: 85 },
@@ -824,12 +825,12 @@ export function Inventory(){
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold text-base-content">Umbrella Inventory</h1>
           <p className="text-base-content/70 mt-1">Track and manage umbrella assets</p>
         </div>
-        <div className="stats shadow">
+        <div className="stats shadow w-full sm:w-auto">
           <div className="stat">
             <div className="stat-title">Total</div>
             <div className="stat-value text-primary">{umbrellas.length}</div>
@@ -850,7 +851,7 @@ export function Inventory(){
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
+      <div className="flex gap-3 flex-wrap">
         <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -899,10 +900,10 @@ export function Inventory(){
       <div className="card bg-base-100 shadow">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
-            <table className="table table-zebra">
+            <table className="table table-zebra text-sm md:text-base">
               <thead>
                 <tr>
-                  <th>ID / QR Code</th>
+                  <th className="whitespace-nowrap">ID / QR Code</th>
                   <th>Station</th>
                   <th>Status</th>
                   <th>Condition</th>
@@ -916,8 +917,8 @@ export function Inventory(){
                   <tr key={umbrella.id}>
                     <td>
                       <div>
-                        <div className="font-bold">{umbrella.id}</div>
-                        <div className="text-sm opacity-50">{umbrella.qrCode}</div>
+                        <div className="font-bold break-all">{umbrella.id}</div>
+                        <div className="text-xs opacity-50 break-all">{umbrella.qrCode}</div>
                       </div>
                     </td>
                     <td>{umbrella.station}</td>
@@ -934,7 +935,7 @@ export function Inventory(){
                     <td>
                       <div className="text-sm">
                         <div>Borrows: {umbrella.borrowCount}</div>
-                        <div className="text-xs opacity-50">Last: {umbrella.lastMaintenance}</div>
+                        <div className="text-xs opacity-50 whitespace-nowrap">Last: {umbrella.lastMaintenance}</div>
                       </div>
                     </td>
                     <td>

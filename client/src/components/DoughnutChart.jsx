@@ -47,14 +47,14 @@ export default function DoughnutChart({ data, title, centerText }) {
   return (
     <div className="card bg-base-100 shadow-lg">
       <div className="card-body">
-        <h3 className="card-title text-lg mb-4">{title}</h3>
-        <div className="relative h-64">
+        <h3 className="card-title text-lg mb-4 truncate">{title}</h3>
+        <div className="relative h-64 sm:h-72">
           <Doughnut data={data} options={options} />
           {centerText && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <div className="text-2xl font-bold text-base-content">{centerText.value}</div>
-                <div className="text-sm text-base-content/70">{centerText.label}</div>
+                <div className="text-xl sm:text-2xl font-bold text-base-content">{centerText.value}</div>
+                <div className="text-xs sm:text-sm text-base-content/70">{centerText.label}</div>
               </div>
             </div>
           )}

@@ -64,14 +64,15 @@ export default function BarChart({ data, title, height = 300, horizontal = false
         borderRadius: 4,
         borderSkipped: false
       }
-    }
+    },
+    layout: { padding: { left: 8, right: 8, top: 8, bottom: 8 } }
   }
 
   return (
     <div className="card bg-base-100 shadow-lg">
       <div className="card-body">
-        <h3 className="card-title text-lg mb-4">{title}</h3>
-        <div style={{ height: `${height}px` }}>
+        <h3 className="card-title text-lg mb-4 truncate">{title}</h3>
+        <div className="w-full" style={{ height: `${height}px` }}>
           <Bar data={data} options={options} />
         </div>
       </div>
