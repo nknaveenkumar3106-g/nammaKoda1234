@@ -17,7 +17,7 @@ function AdminContent(){
   if(!token){ return <Navigate to="/admin" replace /> }
   
   return (
-    <div className="min-h-screen grid grid-rows-[auto,1fr]">
+    <div className="min-h-screen grid grid-rows-[auto,1fr]" data-theme="light">
       <div className="navbar bg-white/80 backdrop-blur-md border-b sticky top-0 z-30 shadow-sm">
         <div className="navbar-start px-3 flex items-center gap-2">
           <button className="btn btn-ghost btn-square md:hidden" onClick={()=>setMenuOpen(v=>!v)} aria-label="Toggle menu">
@@ -40,14 +40,14 @@ function AdminContent(){
       </div>
       <div className="grid grid-cols-1 md:grid-cols-[220px,1fr]">
         <aside className={`border-b md:border-b-0 md:border-r p-3 space-y-1 text-sm md:block ${menuOpen? 'block' : 'hidden'} md:!block`}> 
-          <NavLink to="/admin/dashboard" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Dashboard</NavLink>
-          <NavLink to="/admin/users" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>User Management</NavLink>
-          <NavLink to="/admin/stations" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Umbrella Station Management</NavLink>
-          <NavLink to="/admin/inventory" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Umbrella Inventory</NavLink>
-          <NavLink to="/admin/transactions" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Transactions & Wallet</NavLink>
-          <NavLink to="/admin/ads" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Advertisements Management</NavLink>
-          <NavLink to="/admin/reports" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Reports & Analytics</NavLink>
-          <NavLink to="/admin/settings" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Settings</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/dashboard" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Dashboard</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/users" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>User Management</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/stations" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Umbrella Station Management</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/inventory" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Umbrella Inventory</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/transactions" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Transactions & Wallet</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/ads" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Advertisements Management</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/reports" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Reports & Analytics</NavLink>
+          <NavLink onClick={()=>setMenuOpen(false)} to="/admin/settings" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Settings</NavLink>
         </aside>
         <main className="p-4">
           <Outlet />
