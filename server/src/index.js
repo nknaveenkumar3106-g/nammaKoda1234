@@ -265,7 +265,9 @@ mongoose.set('bufferCommands', false);
 // Allow localhost (dev) and deployed frontend (replace with your Vercel frontend domain)
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://namma-koda1234-nku5.vercel.app'
+  'https://namma-koda1234-nku5.vercel.app',
+  'https://www.nammakoda.online',
+  'https://nammakoda.online'
 ];
 
 app.use(cors({
