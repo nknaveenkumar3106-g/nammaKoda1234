@@ -7,6 +7,7 @@ import StationsPage from '../components/StationsPage.jsx'
 import RealtimeLoginGraph from '../components/RealtimeLoginGraph.jsx'
 import RealtimeUmbrellaHistory from '../components/RealtimeUmbrellaHistory.jsx'
 import RealtimeActivityFeed from '../components/RealtimeActivityFeed.jsx'
+import RealtimeTransactionFeed from '../components/RealtimeTransactionFeed.jsx'
 import { useRealtime } from '../context/RealtimeContext.jsx'
 
 export function Dashboard(){
@@ -124,6 +125,14 @@ export function Dashboard(){
         <div>
           <h1 className="text-3xl font-bold text-base-content">Dashboard</h1>
           <p className="text-base-content/70 mt-1">Real-time insights and analytics</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className={`badge ${isConnected ? 'badge-success' : 'badge-error'}`}>
+              {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+            </div>
+            <span className="text-sm text-base-content/50">
+              Real-time data {isConnected ? 'active' : 'offline'}
+            </span>
+          </div>
         </div>
         <div className="text-sm text-base-content/70">
           Last updated: {new Date().toLocaleTimeString()}
@@ -295,9 +304,11 @@ export function Dashboard(){
 }
 
 export function Users(){
-  const { users: realtimeUsers, userStats, isConnected } = useRealtime()
+  const { users: realtimeUsers, userStats, isConnected, transactions } = useRealtime()
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [isExporting, setIsExporting] = useState(false)
   
   // Debug logging
   useEffect(() => {
@@ -358,6 +369,105 @@ export function Users(){
     ))
   }
 
+  // Export functionality for users
+  const exportUsersToCSV = () => {
+    setIsExporting(true)
+    const csvContent = [
+      ['User ID', 'Name', 'Email', 'Role', 'Wallet Balance', 'Status', 'Borrows', 'Penalties', 'Join Date'],
+      ...filteredUsers.map(user => [
+        user.id,
+        user.name,
+        user.email,
+        user.role,
+        user.wallet,
+        user.status,
+        user.borrows,
+        user.penalties,
+        user.joinDate
+      ])
+    ].map(row => row.join(',')).join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `users_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const exportUsersToJSON = () => {
+    setIsExporting(true)
+    const jsonContent = JSON.stringify(filteredUsers, null, 2)
+    const blob = new Blob([jsonContent], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `users_${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const exportUsersToExcel = () => {
+    setIsExporting(true)
+    const table = document.createElement('table')
+    const headers = ['User ID', 'Name', 'Email', 'Role', 'Wallet Balance', 'Status', 'Borrows', 'Penalties', 'Join Date']
+    const headerRow = document.createElement('tr')
+    headers.forEach(header => {
+      const th = document.createElement('th')
+      th.textContent = header
+      headerRow.appendChild(th)
+    })
+    table.appendChild(headerRow)
+    
+    filteredUsers.forEach(user => {
+      const row = document.createElement('tr')
+      const values = [user.id, user.name, user.email, user.role, user.wallet, user.status, user.borrows, user.penalties, user.joinDate]
+      values.forEach(value => {
+        const td = document.createElement('td')
+        td.textContent = value
+        row.appendChild(td)
+      })
+      table.appendChild(row)
+    })
+    
+    const htmlContent = `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          ${table.outerHTML}
+        </body>
+      </html>
+    `
+    
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `users_${new Date().toISOString().split('T')[0]}.xls`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const handleUserExport = () => {
+    switch(exportFormat) {
+      case 'csv': exportUsersToCSV(); break
+      case 'json': exportUsersToJSON(); break
+      case 'excel': exportUsersToExcel(); break
+      default: exportUsersToCSV()
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -365,23 +475,57 @@ export function Users(){
         <div>
           <h1 className="text-3xl font-bold text-base-content">User Management</h1>
           <p className="text-base-content/70 mt-1">Manage users, wallets, and access controls</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className={`badge ${isConnected ? 'badge-success' : 'badge-error'}`}>
+              {isConnected ? '🟢 Real-time Connected' : '🔴 Disconnected'}
+            </div>
+            <span className="text-sm text-base-content/50">
+              {users.length} users loaded
+            </span>
+            {isConnected && (
+              <div className="flex items-center gap-1 text-success text-sm">
+                <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                Live updates
+              </div>
+            )}
+          </div>
         </div>
-        <div className="stats shadow">
-          <div className="stat">
-            <div className="stat-title">Total Users</div>
-            <div className="stat-value text-primary">{userStats.total || users.length}</div>
+        <div className="flex items-center gap-4">
+          <div className="stats shadow">
+            <div className="stat">
+              <div className="stat-title">Total Users</div>
+              <div className="stat-value text-primary">{userStats.total || users.length}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-title">Active</div>
+              <div className="stat-value text-success">{userStats.active || users.filter(u => u.status === 'active').length}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-title">New Users</div>
+              <div className="stat-value text-info">{userStats.newUsers || 0}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-title">Explorers</div>
+              <div className="stat-value text-warning">{userStats.explorers || 0}</div>
+            </div>
           </div>
-          <div className="stat">
-            <div className="stat-title">Active</div>
-            <div className="stat-value text-success">{userStats.active || users.filter(u => u.status === 'active').length}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">New Users</div>
-            <div className="stat-value text-info">{userStats.newUsers || 0}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">Explorers</div>
-            <div className="stat-value text-warning">{userStats.explorers || 0}</div>
+          <div className="flex items-center gap-2">
+            <select 
+              className="select select-bordered select-sm"
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value)}
+            >
+              <option value="csv">CSV</option>
+              <option value="json">JSON</option>
+              <option value="excel">Excel</option>
+            </select>
+            <button 
+              className={`btn btn-primary btn-sm ${isExporting ? 'loading' : ''}`}
+              onClick={handleUserExport}
+              disabled={isExporting || users.length === 0}
+            >
+              {isExporting ? 'Exporting...' : 'Export Users'}
+            </button>
           </div>
         </div>
       </div>
@@ -856,16 +1000,46 @@ export function Inventory(){
           </div>
         </dialog>
       )}
+
+      {/* Real-time Transaction Feed for Users */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RealtimeTransactionFeed maxItems={10} showUserInfo={true} />
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <h3 className="card-title text-lg mb-4">User Activity Summary</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-primary/10 rounded-lg">
+                <span className="text-primary font-medium">Total Users</span>
+                <span className="text-primary font-bold">{userStats.total || users.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-success/10 rounded-lg">
+                <span className="text-success font-medium">Active Users</span>
+                <span className="text-success font-bold">{userStats.active || users.filter(u => u.status === 'active').length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-info/10 rounded-lg">
+                <span className="text-info font-medium">New Users</span>
+                <span className="text-info font-bold">{userStats.newUsers || 0}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-warning/10 rounded-lg">
+                <span className="text-warning font-medium">Explorers</span>
+                <span className="text-warning font-bold">{userStats.explorers || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
 export function Transactions(){
-  const { transactions: realtimeTransactions, isConnected } = useRealtime()
+  const { transactions: realtimeTransactions, isConnected, users } = useRealtime()
   const [transactions, setTransactions] = useState([])
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [exportFormat, setExportFormat] = useState('csv')
+  const [isExporting, setIsExporting] = useState(false)
 
   // Update transactions from real-time data
   useEffect(() => {
@@ -914,6 +1088,105 @@ export function Transactions(){
   const totalRefunds = transactions.filter(t => t.type === 'refund' && t.status === 'completed').reduce((sum, t) => sum + t.amount, 0)
   const pendingRefunds = transactions.filter(t => t.type === 'refund' && t.status === 'pending').length
 
+  // Export functionality
+  const exportToCSV = () => {
+    setIsExporting(true)
+    const csvContent = [
+      ['Transaction ID', 'User', 'Type', 'Amount', 'Status', 'Date', 'Method', 'Reference'],
+      ...filteredTransactions.map(txn => [
+        txn.id,
+        txn.user,
+        txn.type,
+        txn.amount,
+        txn.status,
+        txn.date,
+        txn.method,
+        txn.reference
+      ])
+    ].map(row => row.join(',')).join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const exportToJSON = () => {
+    setIsExporting(true)
+    const jsonContent = JSON.stringify(filteredTransactions, null, 2)
+    const blob = new Blob([jsonContent], { type: 'application/json' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `transactions_${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const exportToExcel = () => {
+    setIsExporting(true)
+    // Simple Excel export using HTML table
+    const table = document.createElement('table')
+    const headers = ['Transaction ID', 'User', 'Type', 'Amount', 'Status', 'Date', 'Method', 'Reference']
+    const headerRow = document.createElement('tr')
+    headers.forEach(header => {
+      const th = document.createElement('th')
+      th.textContent = header
+      headerRow.appendChild(th)
+    })
+    table.appendChild(headerRow)
+    
+    filteredTransactions.forEach(txn => {
+      const row = document.createElement('tr')
+      const values = [txn.id, txn.user, txn.type, txn.amount, txn.status, txn.date, txn.method, txn.reference]
+      values.forEach(value => {
+        const td = document.createElement('td')
+        td.textContent = value
+        row.appendChild(td)
+      })
+      table.appendChild(row)
+    })
+    
+    const htmlContent = `
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          ${table.outerHTML}
+        </body>
+      </html>
+    `
+    
+    const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `transactions_${new Date().toISOString().split('T')[0]}.xls`
+    a.click()
+    window.URL.revokeObjectURL(url)
+    setIsExporting(false)
+  }
+
+  const handleExport = () => {
+    switch(exportFormat) {
+      case 'csv': exportToCSV(); break
+      case 'json': exportToJSON(); break
+      case 'excel': exportToExcel(); break
+      default: exportToCSV()
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -921,6 +1194,32 @@ export function Transactions(){
         <div>
           <h1 className="text-3xl font-bold text-base-content">Transaction Management</h1>
           <p className="text-base-content/70 mt-1">Monitor wallet operations and financial activities</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className={`badge ${isConnected ? 'badge-success' : 'badge-error'}`}>
+              {isConnected ? '🟢 Real-time Connected' : '🔴 Disconnected'}
+            </div>
+            <span className="text-sm text-base-content/50">
+              {transactions.length} transactions loaded
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <select 
+            className="select select-bordered select-sm"
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+          >
+            <option value="csv">CSV</option>
+            <option value="json">JSON</option>
+            <option value="excel">Excel</option>
+          </select>
+          <button 
+            className={`btn btn-primary btn-sm ${isExporting ? 'loading' : ''}`}
+            onClick={handleExport}
+            disabled={isExporting || transactions.length === 0}
+          >
+            {isExporting ? 'Exporting...' : 'Export Data'}
+          </button>
         </div>
       </div>
 
@@ -967,7 +1266,7 @@ export function Transactions(){
       {/* Filters */}
       <div className="card bg-base-100 shadow">
         <div className="card-body">
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 items-center">
             <select 
               className="select select-bordered"
               value={filterType}
@@ -989,7 +1288,17 @@ export function Transactions(){
               <option value="pending">Pending</option>
               <option value="failed">Failed</option>
             </select>
-            <button className="btn btn-primary">Export Report</button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-base-content/70">
+                Showing {filteredTransactions.length} of {transactions.length} transactions
+              </span>
+              {isConnected && (
+                <div className="flex items-center gap-1 text-success text-sm">
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
+                  Live updates
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1128,6 +1437,34 @@ export function Transactions(){
           </div>
         </dialog>
       )}
+
+      {/* Real-time Transaction Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RealtimeTransactionFeed maxItems={15} showUserInfo={true} />
+        <div className="card bg-base-100 shadow">
+          <div className="card-body">
+            <h3 className="card-title text-lg mb-4">Transaction Summary</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-success/10 rounded-lg">
+                <span className="text-success font-medium">Total Deposits</span>
+                <span className="text-success font-bold">₹{totalDeposits}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-error/10 rounded-lg">
+                <span className="text-error font-medium">Penalties Collected</span>
+                <span className="text-error font-bold">₹{totalPenalties}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-warning/10 rounded-lg">
+                <span className="text-warning font-medium">Refunds Processed</span>
+                <span className="text-warning font-bold">₹{totalRefunds}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-info/10 rounded-lg">
+                <span className="text-info font-medium">Pending Refunds</span>
+                <span className="text-info font-bold">{pendingRefunds}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -321,6 +321,66 @@ app.use((err, req, res, next) => {
 // ----- Health check -----
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
+// ----- Test data endpoint -----
+app.post('/api/test-data', async (req, res) => {
+  try {
+    const usersCollection = mongoose.connection.collection('users');
+    
+    // Add test users with transactions
+    const testUsers = [
+      {
+        name: 'Rajesh Kumar',
+        email: 'rajesh@gmail.com',
+        passwordHash: 'hashed_password',
+        role: 'existing_user',
+        wallet: { balance: 150, currency: 'INR' },
+        transactions: [
+          { amount: 100, type: 'deposit', createdAt: new Date(Date.now() - 86400000), meta: { method: 'UPI' } },
+          { amount: -10, type: 'borrow', createdAt: new Date(Date.now() - 3600000), meta: { stationName: 'Main Gate' } }
+        ],
+        createdAt: new Date(Date.now() - 86400000)
+      },
+      {
+        name: 'Priya Sharma',
+        email: 'priya@gmail.com',
+        passwordHash: 'hashed_password',
+        role: 'existing_user',
+        wallet: { balance: 75, currency: 'INR' },
+        transactions: [
+          { amount: 50, type: 'deposit', createdAt: new Date(Date.now() - 172800000), meta: { method: 'Card' } },
+          { amount: -10, type: 'borrow', createdAt: new Date(Date.now() - 7200000), meta: { stationName: 'Library' } },
+          { amount: -25, type: 'penalty', createdAt: new Date(Date.now() - 1800000), meta: { reason: 'Late return' } }
+        ],
+        createdAt: new Date(Date.now() - 172800000)
+      },
+      {
+        name: 'Amit Singh',
+        email: 'amit@gmail.com',
+        passwordHash: 'hashed_password',
+        role: 'new_user',
+        wallet: { balance: 200, currency: 'INR' },
+        transactions: [
+          { amount: 200, type: 'deposit', createdAt: new Date(Date.now() - 259200000), meta: { method: 'UPI' } }
+        ],
+        createdAt: new Date(Date.now() - 259200000)
+      }
+    ];
+    
+    // Clear existing users and insert test data
+    await usersCollection.deleteMany({});
+    await usersCollection.insertMany(testUsers);
+    
+    res.json({ 
+      success: true, 
+      message: 'Test data added successfully',
+      usersAdded: testUsers.length
+    });
+  } catch (err) {
+    console.error('Error adding test data:', err);
+    res.status(500).json({ error: 'Failed to add test data' });
+  }
+});
+
 // ----- Admin test endpoint -----
 app.get('/api/admin/test', (req, res) => {
   try {
@@ -404,14 +464,55 @@ app.get('/api/stream/admin', async (req, res) => {
       total: users.length,
       active: users.filter(u => u.role !== 'blocked').length
     };
-    res.write(`event: initial\ndata: ${JSON.stringify({ users, stats })}\n\n`);
+    
+    // Get all transactions from all users
+    const allTransactions = [];
+    users.forEach(user => {
+      if (Array.isArray(user.transactions)) {
+        user.transactions.forEach(txn => {
+          allTransactions.push({
+            ...txn,
+            userName: user.name,
+            userEmail: user.email
+          });
+        });
+      }
+    });
+    
+    // Sort transactions by date (newest first)
+    const sortedTransactions = allTransactions
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 100); // Limit to 100 most recent
+    
+    res.write(`event: initial\ndata: ${JSON.stringify({ users, stats, transactions: sortedTransactions })}\n\n`);
   };
   await sendData();
 
   const interval = setInterval(async () => {
     const users = await usersCollection.find({}).toArray();
     const stats = { total: users.length, active: users.filter(u => u.role !== 'blocked').length };
+    
+    // Get all transactions from all users
+    const allTransactions = [];
+    users.forEach(user => {
+      if (Array.isArray(user.transactions)) {
+        user.transactions.forEach(txn => {
+          allTransactions.push({
+            ...txn,
+            userName: user.name,
+            userEmail: user.email
+          });
+        });
+      }
+    });
+    
+    // Sort transactions by date (newest first)
+    const sortedTransactions = allTransactions
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 100); // Limit to 100 most recent
+    
     res.write(`event: users\ndata: ${JSON.stringify({ users, stats })}\n\n`);
+    res.write(`event: transactions\ndata: ${JSON.stringify({ transactions: sortedTransactions })}\n\n`);
   }, 10000);
 
   req.on('close', () => {

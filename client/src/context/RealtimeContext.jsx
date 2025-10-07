@@ -34,8 +34,13 @@ export const RealtimeProvider = ({ children }) => {
     console.log('Admin token found, connecting to real-time stream...');
     
     // Test the admin authentication first
-    fetch(`/api/admin/test?token=${encodeURIComponent(token)}`)
-      .then(response => response.json())
+    fetch(`https://nammakoda1234.onrender.com/api/admin/test?token=${encodeURIComponent(token)}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         console.log('Admin auth test result:', data);
         if (data.success) {
@@ -47,7 +52,7 @@ export const RealtimeProvider = ({ children }) => {
       });
 
     // EventSource doesn't support custom headers, so we'll pass the token as a query parameter
-    const eventSource = new EventSource(`/api/stream/admin?token=${encodeURIComponent(token)}`);
+    const eventSource = new EventSource(`https://nammakoda1234.onrender.com/api/stream/admin?token=${encodeURIComponent(token)}`);
 
     eventSource.onopen = () => {
       setIsConnected(true);
@@ -99,7 +104,17 @@ export const RealtimeProvider = ({ children }) => {
 
     eventSource.onerror = (error) => {
       console.error('Real-time connection error:', error);
+      console.error('EventSource readyState:', eventSource.readyState);
       setIsConnected(false);
+      
+      // Try to reconnect after 5 seconds
+      setTimeout(() => {
+        if (eventSource.readyState === EventSource.CLOSED) {
+          console.log('Attempting to reconnect...');
+          eventSource.close();
+          // The useEffect will trigger again and create a new connection
+        }
+      }, 5000);
     };
 
     return () => {

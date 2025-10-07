@@ -7,10 +7,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://namma-koda1234-qk8v.vercel.app',
+        target: 'https://nammakoda1234.onrender.com',
         changeOrigin: true,
         ws: true,
-        secure: false
+        secure: true
       }
     }
   }
