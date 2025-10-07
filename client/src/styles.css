@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override success badge background to be transparent globally */
+.badge-success{
+	background-color: transparent !important;
+}
+
 html, body, #root { height: 100%; }
 html, body { overflow-x: hidden; }
 

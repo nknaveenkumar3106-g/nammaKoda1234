@@ -85,9 +85,9 @@ export default function IntroPage() {
           
           <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow animate-rise delay-500">
             <div className="text-4xl mb-4">💰</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Affordable Rates</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Refundable Deposit</h3>
             <p className="text-gray-600">
-              Pay only for what you use with our transparent pricing system.
+              A small deposit is held while you borrow and refunded when you return.
             </p>
           </div>
         </div>

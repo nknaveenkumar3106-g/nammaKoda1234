@@ -527,19 +527,14 @@ export function Users(){
         <div>
           <h1 className="text-3xl font-bold text-base-content">User Management</h1>
           <p className="text-base-content/70 mt-1">Manage users, wallets, and access controls</p>
-          <div className="flex items-center gap-2 mt-2">
-            <div className={`badge ${isConnected ? 'badge-success' : 'badge-error'}`}>
-              {isConnected ? '🟢 Real-time Connected' : '🔴 Disconnected'}
-            </div>
-            <span className="text-sm text-base-content/50">
+          <div className="hidden sm:flex items-center gap-2 mt-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-1 py-1 rounded-full">
+              <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-error'} animate-pulse`}></span>
+              <span className="text-xs text-base-content/70">{isConnected ? 'Connected' : 'Offline'}</span>
+            </span>
+            <span className="text-xs sm:text-sm text-base-content/50 whitespace-nowrap">
               {users.length} users loaded
             </span>
-            {isConnected && (
-              <div className="flex items-center gap-1 text-success text-sm">
-                <div className="w-2 h-2 bg-success rounded-full animate-pulse"></div>
-                Live updates
-              </div>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -689,7 +684,7 @@ export function Users(){
                         </div>
                       </td>
                       <td>
-                        <div className={`badge ${user.status === 'active' ? 'badge-success' : 'badge-error'}`}>
+                        <div className={`badge ${user.status === 'active' ? 'sm:badge-success' : 'badge-error'} ${user.status === 'active' ? 'badge-ghost sm:badge-success' : ''}`}>
                           {user.status}
                         </div>
                       </td>
@@ -923,7 +918,7 @@ export function Inventory(){
                     </td>
                     <td>{umbrella.station}</td>
                     <td>
-                      <div className={`badge ${getStatusColor(umbrella.status)}`}>
+                      <div className={`badge sm:${getStatusColor(umbrella.status)} ${getStatusColor(umbrella.status)==='badge-success' ? 'badge-ghost sm:badge-success' : ''}`}>
                         {umbrella.status}
                       </div>
                     </td>
@@ -1016,7 +1011,7 @@ export function Inventory(){
                 <div><strong>QR Code:</strong> {selectedUmbrella.qrCode}</div>
                 <div><strong>Station:</strong> {selectedUmbrella.station}</div>
                 <div><strong>Status:</strong> 
-                  <span className={`ml-2 badge ${getStatusColor(selectedUmbrella.status)}`}>
+                  <span className={`ml-2 badge sm:${getStatusColor(selectedUmbrella.status)} ${getStatusColor(selectedUmbrella.status)==='badge-success' ? 'badge-ghost sm:badge-success' : ''}`}>
                     {selectedUmbrella.status}
                   </span>
                 </div>
@@ -1245,15 +1240,16 @@ export function Transactions(){
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-3xl font-bold text-base-content">Transaction Management</h1>
           <p className="text-base-content/70 mt-1">Monitor wallet operations and financial activities</p>
-          <div className="flex items-center gap-2 mt-2">
-            <div className={`badge ${isConnected ? 'badge-success' : 'badge-error'}`}>
-              {isConnected ? '🟢 Real-time Connected' : '🔴 Disconnected'}
-            </div>
-            <span className="text-sm text-base-content/50">
+          <div className="hidden sm:flex items-center gap-2 mt-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 px-1 py-1 rounded-full">
+              <span className={`inline-block w-2 h-2 rounded-full ${isConnected ? 'bg-success' : 'bg-error'} animate-pulse`}></span>
+              <span className="text-xs text-base-content/70">{isConnected ? 'Connected' : 'Offline'}</span>
+            </span>
+            <span className="text-xs sm:text-sm text-base-content/50 whitespace-nowrap">
               {transactions.length} transactions loaded
             </span>
           </div>

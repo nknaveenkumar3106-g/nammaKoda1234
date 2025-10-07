@@ -18,7 +18,7 @@ function AdminContent(){
   
   return (
     <div className="min-h-screen grid grid-rows-[auto,1fr]">
-      <div className="navbar bg-base-100 border-b">
+      <div className="navbar bg-white/80 backdrop-blur-md border-b sticky top-0 z-30 shadow-sm">
         <div className="navbar-start px-3 flex items-center gap-2">
           <button className="btn btn-ghost btn-square md:hidden" onClick={()=>setMenuOpen(v=>!v)} aria-label="Toggle menu">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
