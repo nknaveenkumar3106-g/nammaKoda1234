@@ -47,6 +47,21 @@ export const adminAPI = {
     const token = localStorage.getItem('adminToken')
     const res = await api.post('/admin/add', { accessPassword, name, userId, password, role }, { headers: { Authorization: `Bearer ${token}` } })
     return res.data
+  },
+  async getUsers(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/users', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
+  },
+  async getTransactions(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/transactions', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
+  },
+  async getStats(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
   }
 }
 
