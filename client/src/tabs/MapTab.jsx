@@ -15,16 +15,25 @@ export default function MapTab(){
         await new Promise((res)=>{ const script=document.createElement('script'); script.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'; document.body.appendChild(script); script.onload=res })
       }
     }
+    let mapInstance
     ensureLeaflet().then(()=>{
       const L = window.L
       if(!mapRef.current) return
-      // Center at Annai Mira College, Ranipet (exact from shared link)
-      const map = L.map(mapRef.current).setView(CENTER, 17)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map)
-      // Primary marker exactly at center
-      L.marker(CENTER).addTo(map).bindPopup('<b>Annai Mira College</b><br/>Center point').openPopup()
+      // Prevent double-initialization in StrictMode or remounts
+      if(mapRef.current._leaflet_id){
+        // Already initialized; reuse existing map instance
+        mapInstance = mapRef.current._leaflet_map
+      } else {
+        // Center at Annai Mira College, Ranipet (exact from shared link)
+        mapInstance = L.map(mapRef.current).setView(CENTER, 17)
+        // attach for reuse
+        mapRef.current._leaflet_map = mapInstance
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(mapInstance)
+        // Primary marker exactly at center
+        L.marker(CENTER).addTo(mapInstance).bindPopup('<b>Annai Mira College</b><br/>Center point').openPopup()
+      }
       // Ensure sizing after render
-      setTimeout(()=> map.invalidateSize(), 200)
+      setTimeout(()=> mapInstance && mapInstance.invalidateSize(), 200)
       // Sample Tamil Nadu locations - Annai Mira College (Ranipet) vicinity
       const locations = [
         { id: 1, name: 'Main Gate', subtitle: 'Annai Mira College Entrance', dist: '0.0 km', coords: CENTER, slots:[{label:'Slot A',status:'borrowed'},{label:'Slot B',status:'borrowed'}] },
@@ -43,13 +52,38 @@ export default function MapTab(){
         const hasDry = loc.slots.some(s=>s.status==='drying')
         const color = hasAvailable ? 'green' : hasDry ? 'orange' : 'red'
         const icon = L.divIcon({ className: 'custom-pin', html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 0 2px ${color}"></div>` })
-        const marker = L.marker(loc.coords, { icon }).addTo(map)
+        const marker = L.marker(loc.coords, { icon }).addTo(mapInstance)
         marker.bindPopup(`<div class="font-bold">${loc.name}</div>`) 
       })
     })
+    return ()=>{
+      try{
+        const L = window.L
+        if(L && mapRef.current && mapRef.current._leaflet_map){
+          mapRef.current._leaflet_map.remove()
+          delete mapRef.current._leaflet_map
+        }
+      }catch{}
+    }
   },[])
 
   const [borrowed, setBorrowed] = useState(()=> Boolean(localStorage.getItem('borrowedUntil')))
+  // Sync borrowed state with server to avoid stale local-only state
+  useEffect(()=>{
+    (async ()=>{
+      try{
+        const latest = await walletAPI.getBalance()
+        if(latest?.currentBorrow?.active){
+          const dueTs = new Date(latest.currentBorrow.dueAt || Date.now()).getTime()
+          localStorage.setItem('borrowedUntil', String(dueTs))
+          setBorrowed(true)
+        } else {
+          localStorage.removeItem('borrowedUntil')
+          setBorrowed(false)
+        }
+      }catch{}
+    })()
+  },[])
   const stations = [
     { id:1, name:'Main Gate', subtitle:'Annai Mira College Entrance', dist:'0.1 km', slots:[{label:'Slot A',status:'borrowed'},{label:'Slot B',status:'borrowed'}]},
     { id:2, name:'Library Block', subtitle:'Central Library', dist:'0.2 km', slots:[{label:'Slot A',status:'available'},{label:'Slot B',status:'available'}]},
@@ -118,7 +152,17 @@ export default function MapTab(){
                     localStorage.setItem('borrowedUntil', String(dueTs))
                     setBorrowed(true)
                     showToast('Borrow started. Timer will appear on Home.', 'success')
-                  }catch(err){ showToast(err?.response?.data?.error || 'Borrow failed', 'error') }
+                  }catch(err){
+                    const status = err?.response?.status
+                    const msg = err?.response?.data?.error
+                    if(status===409){
+                      showToast(msg || 'You already have an active borrow. Return from Home tab.', 'error')
+                    } else if(status===402){
+                      showToast(msg || 'Insufficient balance (need 50 coins).', 'error')
+                    } else {
+                      showToast(msg || 'Borrow failed', 'error')
+                    }
+                  }
                 }}>Borrow from here</button>
                 {borrowed && <span className="badge badge-warning">Borrow active</span>}
               </div>

@@ -54,16 +54,21 @@ router.post('/borrow', requireAuth, async (req, res) => {
     if (!user) return res.status(404).json({ error: 'User not found' });
     if (user.currentBorrow?.active) return res.status(409).json({ error: 'Already borrowing an umbrella' });
     const now = new Date();
-    const isExplorer = user.role === 'explorer' && user.explorer?.enabled && user.explorer?.expiresAt && now < new Date(user.explorer.expiresAt);
-    if (!isExplorer && (user.wallet.balance ?? 0) < 50) return res.status(402).json({ error: 'Insufficient coins (need 50)' });
+    const explorerActive = user.role === 'explorer' && user.explorer?.enabled && user.explorer?.expiresAt && now < new Date(user.explorer.expiresAt);
+    const explorerFreeEligible = explorerActive && !user.explorer?.borrowUsed;
+
+    // Require coins unless this is the first (free) explorer borrow
+    if (!explorerFreeEligible && (user.wallet.balance ?? 0) < 50) {
+      return res.status(402).json({ error: 'Insufficient coins (need 50)' });
+    }
 
     let due;
-    if (isExplorer) {
-      if (user.explorer?.borrowUsed) return res.status(409).json({ error: 'Explorer one-time borrow already used' });
-      // Explorer free borrow for 50 minutes
+    if (explorerFreeEligible) {
+      // First free borrow for explorers: 50 minutes
       due = new Date(now.getTime() + 50 * 60 * 1000);
       user.explorer.borrowUsed = true;
     } else {
+      // Normal paid borrow (including subsequent explorer borrows)
       user.wallet.balance -= 50;
       user.transactions.unshift({ amount: -50, type: 'borrow', meta: { stationId, stationName } });
       due = new Date(now.getTime() + 2 * 60 * 60 * 1000);
