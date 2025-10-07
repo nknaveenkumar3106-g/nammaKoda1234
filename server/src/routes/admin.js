@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import Admin from '../models/Admin.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 
@@ -70,6 +71,73 @@ router.post('/add', requireAdmin, async (req, res) => {
     return res.status(201).json({ ok: true, admin: { id: admin._id, name: admin.name, userId: admin.userId, role: admin.role } });
   } catch (err) {
     console.error('[admin/add] error', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all users
+router.get('/users', requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find({}).select('-passwordHash').sort({ createdAt: -1 });
+    return res.json({ users });
+  } catch (err) {
+    console.error('[admin/users] error', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get all transactions
+router.get('/transactions', requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find({}).select('name email transactions');
+    const allTransactions = [];
+    
+    users.forEach(user => {
+      if (Array.isArray(user.transactions)) {
+        user.transactions.forEach(txn => {
+          allTransactions.push({
+            ...txn,
+            userName: user.name,
+            userEmail: user.email
+          });
+        });
+      }
+    });
+    
+    const sortedTransactions = allTransactions
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    return res.json({ transactions: sortedTransactions });
+  } catch (err) {
+    console.error('[admin/transactions] error', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Get admin stats
+router.get('/stats', requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find({});
+    const stats = {
+      total: users.length,
+      active: users.filter(u => u.role !== 'blocked').length,
+      newUsers: users.filter(u => u.role === 'new_user').length,
+      existingUsers: users.filter(u => u.role === 'existing_user').length,
+      explorers: users.filter(u => u.role === 'explorer').length,
+      blocked: users.filter(u => u.role === 'blocked').length
+    };
+    
+    // Calculate total wallet balance
+    const totalBalance = users.reduce((sum, user) => sum + (user.wallet?.balance || 0), 0);
+    stats.totalBalance = totalBalance;
+    
+    // Calculate total transactions count
+    const totalTransactions = users.reduce((sum, user) => sum + (user.transactions?.length || 0), 0);
+    stats.totalTransactions = totalTransactions;
+    
+    return res.json({ stats });
+  } catch (err) {
+    console.error('[admin/stats] error', err);
     return res.status(500).json({ error: 'Server error' });
   }
 });

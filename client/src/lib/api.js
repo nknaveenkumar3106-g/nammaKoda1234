@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://nammakoda1234.onrender.com/api'
+  baseURL: import.meta.env.VITE_API_URL || 'https://server-oguckic1n-nammakodas-projects.vercel.app/api'
 })
 
 api.interceptors.request.use((config) => {
@@ -46,6 +46,21 @@ export const adminAPI = {
   async addAdmin(accessPassword, name, userId, password, role){
     const token = localStorage.getItem('adminToken')
     const res = await api.post('/admin/add', { accessPassword, name, userId, password, role }, { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
+  },
+  async getUsers(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/users', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
+  },
+  async getTransactions(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/transactions', { headers: { Authorization: `Bearer ${token}` } })
+    return res.data
+  },
+  async getStats(){
+    const token = localStorage.getItem('adminToken')
+    const res = await api.get('/admin/stats', { headers: { Authorization: `Bearer ${token}` } })
     return res.data
   }
 }

@@ -8,9 +8,11 @@ import RealtimeLoginGraph from '../components/RealtimeLoginGraph.jsx'
 import RealtimeUmbrellaHistory from '../components/RealtimeUmbrellaHistory.jsx'
 import RealtimeActivityFeed from '../components/RealtimeActivityFeed.jsx'
 import { useRealtime } from '../context/RealtimeContext.jsx'
+import { adminAPI } from '../lib/api.js'
 
 export function Dashboard(){
   const { isConnected, userStats, transactions } = useRealtime()
+  const [stats, setStats] = useState({})
   
   // Debug logging
   useEffect(() => {
@@ -18,6 +20,24 @@ export function Dashboard(){
     console.log('Dashboard - userStats:', userStats);
     console.log('Dashboard - transactions:', transactions);
   }, [isConnected, userStats, transactions])
+
+  // Fallback: Fetch stats directly if real-time fails
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!isConnected && Object.keys(stats).length === 0) {
+        try {
+          console.log('🔄 Fetching stats via API fallback...');
+          const response = await adminAPI.getStats();
+          setStats(response.stats);
+          console.log('✅ Stats fetched via API:', response.stats);
+        } catch (error) {
+          console.error('❌ Failed to fetch stats:', error);
+        }
+      }
+    };
+
+    fetchStats();
+  }, [isConnected, stats])
   
   const [realTimeData, setRealTimeData] = useState({
     totalUmbrellas: 250,
@@ -35,12 +55,13 @@ export function Dashboard(){
 
   // Update real-time data from context
   useEffect(() => {
+    const currentStats = userStats.active ? userStats : stats;
     setRealTimeData(prev => ({
       ...prev,
-      activeUsers: userStats.active || 0,
+      activeUsers: currentStats.active || 0,
       totalTransactions: transactions.length || 0
     }))
-  }, [userStats, transactions])
+  }, [userStats, stats, transactions])
 
   // Simulate umbrella status updates
   useEffect(() => {
@@ -333,6 +354,37 @@ export function Users(){
       setIsLoading(false)
     }
   }, [realtimeUsers])
+
+  // Fallback: Fetch users directly if real-time fails
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!isConnected && users.length === 0) {
+        try {
+          console.log('🔄 Fetching users via API fallback...');
+          const response = await adminAPI.getUsers();
+          const formattedUsers = response.users.map(user => ({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            wallet: user.wallet?.balance || 0,
+            status: user.role === 'blocked' ? 'blocked' : 'active',
+            borrows: user.transactions?.filter(t => t.type === 'borrow').length || 0,
+            penalties: user.transactions?.filter(t => t.type === 'penalty').length || 0,
+            joinDate: new Date(user.createdAt).toISOString().split('T')[0]
+          }));
+          setUsers(formattedUsers);
+          console.log('✅ Users fetched via API:', formattedUsers);
+        } catch (error) {
+          console.error('❌ Failed to fetch users:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchUsers();
+  }, [isConnected, users.length])
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -883,6 +935,34 @@ export function Transactions(){
       setTransactions(formattedTransactions)
     }
   }, [realtimeTransactions])
+
+  // Fallback: Fetch transactions directly if real-time fails
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!isConnected && transactions.length === 0) {
+        try {
+          console.log('🔄 Fetching transactions via API fallback...');
+          const response = await adminAPI.getTransactions();
+          const formattedTransactions = response.transactions.map((txn, index) => ({
+            id: `TXN${String(index + 1).padStart(3, '0')}`,
+            user: txn.userName || 'Unknown User',
+            type: txn.type,
+            amount: txn.amount,
+            status: 'completed',
+            date: new Date(txn.createdAt).toLocaleString(),
+            method: txn.meta?.method || 'wallet',
+            reference: txn.meta?.reference || txn.type
+          }));
+          setTransactions(formattedTransactions);
+          console.log('✅ Transactions fetched via API:', formattedTransactions);
+        } catch (error) {
+          console.error('❌ Failed to fetch transactions:', error);
+        }
+      }
+    };
+
+    fetchTransactions();
+  }, [isConnected, transactions.length])
 
   const filteredTransactions = transactions.filter(txn => {
     const matchesType = filterType === 'all' || txn.type === filterType
