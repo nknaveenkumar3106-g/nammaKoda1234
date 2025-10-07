@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Navigate } from 'react-router-dom'
+import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom'
 import { useMemo } from 'react'
 import { RealtimeProvider } from '../context/RealtimeContext.jsx'
 
@@ -10,6 +10,7 @@ function useAdmin(){
 
 function AdminContent(){
   const { token, admin } = useAdmin()
+  const navigate = useNavigate()
   
   if(!token){ return <Navigate to="/admin" replace /> }
   
@@ -18,12 +19,20 @@ function AdminContent(){
       <div className="navbar bg-base-100 border-b">
         <div className="navbar-start px-3 font-bold">Admin Panel</div>
         <div className="navbar-center"></div>
-        <div className="navbar-end px-3 text-sm">
-          {admin?.name} ({admin?.userId})
+        <div className="navbar-end px-3 text-sm flex items-center gap-2">
+          <span className="hidden sm:inline">{admin?.name} ({admin?.userId})</span>
+          <button
+            className="btn btn-sm btn-error"
+            onClick={() => {
+              localStorage.removeItem('adminToken')
+              localStorage.removeItem('admin')
+              navigate('/admin', { replace: true })
+            }}
+          >Logout</button>
         </div>
       </div>
-      <div className="grid grid-cols-[220px,1fr]">
-        <aside className="border-r p-3 space-y-1 text-sm">
+      <div className="grid grid-cols-1 md:grid-cols-[220px,1fr]">
+        <aside className="border-b md:border-b-0 md:border-r p-3 space-y-1 text-sm flex md:block overflow-x-auto">
           <NavLink to="/admin/dashboard" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Dashboard</NavLink>
           <NavLink to="/admin/users" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>User Management</NavLink>
           <NavLink to="/admin/stations" className={({isActive})=>`block px-2 py-2 rounded ${isActive?'bg-base-200':''}`}>Umbrella Station Management</NavLink>
