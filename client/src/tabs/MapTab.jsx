@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { walletAPI } from '../lib/api.js'
+import { walletAPI, showToast } from '../lib/api.js'
 import AdPlaceholder from '../components/AdPlaceholder.jsx'
 
 // Redesigned Map tab with header, mini preview, station cards, and legend
@@ -117,8 +117,8 @@ export default function MapTab(){
                     const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now()+2*60*60*1000).getTime()
                     localStorage.setItem('borrowedUntil', String(dueTs))
                     setBorrowed(true)
-                    alert('Borrow started. Timer will appear on Home.')
-                  }catch(err){ alert(err?.response?.data?.error || 'Borrow failed') }
+                    showToast('Borrow started. Timer will appear on Home.', 'success')
+                  }catch(err){ showToast(err?.response?.data?.error || 'Borrow failed', 'error') }
                 }}>Borrow from here</button>
                 {borrowed && <span className="badge badge-warning">Borrow active</span>}
               </div>

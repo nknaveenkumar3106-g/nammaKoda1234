@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { makeWhiteTransparent } from '../lib/logoUtils.js'
 import RechargeModal from '../components/RechargeModal.jsx'
 import AdPlaceholder from '../components/AdPlaceholder.jsx'
-import { api, walletAPI } from '../lib/api.js'
+import { api, walletAPI, showToast } from '../lib/api.js'
 
 export default function HomeTab(){
   const navigate = useNavigate()
@@ -74,7 +74,8 @@ export default function HomeTab(){
       await walletAPI.returnUmbrella()
       localStorage.removeItem('borrowedUntil')
       setBorrowedUntil(0)
-    }catch(err){ alert(err?.response?.data?.error || 'Return failed') }
+      showToast('Return successful. Deposit adjusted.', 'success')
+    }catch(err){ showToast(err?.response?.data?.error || 'Return failed', 'error') }
   }
   const heroClass = weather.condition==='rainy' ? 'hero-cool' : weather.temperatureC!=null && weather.temperatureC>=30 ? 'hero-hot' : weather.temperatureC!=null && weather.temperatureC<=20 ? 'hero-cool' : 'hero-mild'
   return (

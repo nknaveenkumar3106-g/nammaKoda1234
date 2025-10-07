@@ -84,4 +84,14 @@ export const walletAPI = {
   }
 }
 
+export function showToast(message, type = 'info'){
+  const root = document.getElementById('toast-root')
+  if(!root) return alert(message)
+  const div = document.createElement('div')
+  div.className = `pointer-events-auto alert ${type==='success'?'alert-success': type==='error'?'alert-error':'alert-info'} shadow` 
+  div.innerHTML = `<span>${message}</span>`
+  root.appendChild(div)
+  setTimeout(()=>{ div.classList.add('opacity-0'); setTimeout(()=> div.remove(), 300) }, 2500)
+}
+
 
