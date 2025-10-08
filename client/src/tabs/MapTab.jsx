@@ -93,87 +93,197 @@ export default function MapTab(){
   },[])
 
   // Handle borrow method selection
+  // const handleBorrowMethod = async (method) => {
+  //   if (!selectedStation) return
+    
+  //   setShowBorrowOptions(false)
+    
+  //   try {
+  //     // Handle different methods with specific flows
+  //     if (method === 'rfid') {
+  //       // RF ID - just show recognizing
+  //       setIsRecognizing(true)
+  //       const delay = Math.random() * 3000 + 2000 // 2-5 seconds
+  //       await new Promise(resolve => setTimeout(resolve, delay))
+  //       showToast('RF ID recognized!', 'success')
+        
+  //     } else if (method === 'scan-qr') {
+  //       // Scan QR - show camera feed for 2 seconds, then recognize
+  //       setShowCamera(true)
+  //       try {
+  //         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+  //         setCameraStream(stream)
+  //         showToast('Camera opened - scanning for QR code...', 'info')
+          
+  //         // Show camera for 2 seconds
+  //         await new Promise(resolve => setTimeout(resolve, 2000))
+          
+  //         // Stop camera and show recognizing
+  //         stream.getTracks().forEach(track => track.stop())
+  //         setShowCamera(false)
+  //         setCameraStream(null)
+          
+  //         setIsRecognizing(true)
+  //         const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+  //         await new Promise(resolve => setTimeout(resolve, delay))
+  //         showToast('QR Code scanned successfully!', 'success')
+          
+  //       } catch (err) {
+  //         setShowCamera(false)
+  //         setCameraStream(null)
+  //         showToast('Camera access denied or not available', 'error')
+  //         return
+  //       }
+        
+  //     } else if (method === 'show-qr') {
+  //       // Show QR - generate and display QR code for 2 seconds
+  //       const generatedQrData = `nammakoda:${Date.now()}:${Math.random().toString(36).substr(2, 9)}`
+  //       setQrData(generatedQrData)
+  //       setShowQRCode(true)
+  //       showToast('QR Code generated!', 'info')
+        
+  //       // Show QR for 2 seconds
+  //       await new Promise(resolve => setTimeout(resolve, 2000))
+  //       setShowQRCode(false)
+  //       setQrData('')
+        
+  //       // Then show recognizing
+  //       setIsRecognizing(true)
+  //       const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+  //       await new Promise(resolve => setTimeout(resolve, delay))
+  //       showToast('QR Code recognized!', 'success')
+        
+  //     } else if (method === 'camera') {
+  //       // Camera - show live feed for 2 seconds, then recognize
+  //       setShowCamera(true)
+  //       try {
+  //         const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+  //         setCameraStream(stream)
+  //         showToast('Camera opened - scanning...', 'info')
+          
+  //         // Show camera for 2 seconds
+  //         await new Promise(resolve => setTimeout(resolve, 2000))
+          
+  //         // Stop camera and show recognizing
+  //         stream.getTracks().forEach(track => track.stop())
+  //         setShowCamera(false)
+  //         setCameraStream(null)
+          
+  //         setIsRecognizing(true)
+  //         const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+  //         await new Promise(resolve => setTimeout(resolve, delay))
+  //         showToast('Camera scan completed!', 'success')
+          
+  //       } catch (err) {
+  //         setShowCamera(false)
+  //         setCameraStream(null)
+  //         showToast('Camera access denied or not available', 'error')
+  //         return
+  //       }
+  //     }
+      
+  //     // Proceed with actual borrow after recognition
+  //     const resp = await walletAPI.borrow(String(selectedStation.id), selectedStation.name)
+  //     const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now()+2*60*60*1000).getTime()
+  //     localStorage.setItem('borrowedUntil', String(dueTs))
+  //     setBorrowed(true)
+  //     showToast('Borrow started. Timer will appear on Home.', 'success')
+      
+  //   } catch(err){
+  //     const status = err?.response?.status
+  //     const msg = err?.response?.data?.error
+  //     if(status===409){
+  //       showToast(msg || 'You already have an active borrow. Return from Home tab.', 'error')
+  //     } else if(status===402){
+  //       showToast(msg || 'Insufficient balance (need 50 coins).', 'error')
+  //     } else {
+  //       showToast(msg || 'Borrow failed', 'error')
+  //     }
+  //   } finally {
+  //     setIsRecognizing(false)
+  //     setSelectedStation(null)
+  //     setShowCamera(false)
+  //     setCameraStream(null)
+  //     setShowQRCode(false)
+  //     setQrData('')
+  //   }
+  // }
   const handleBorrowMethod = async (method) => {
     if (!selectedStation) return
-    
+  
     setShowBorrowOptions(false)
-    
+  
     try {
-      // Handle different methods with specific flows
       if (method === 'rfid') {
-        // RF ID - just show recognizing
         setIsRecognizing(true)
-        const delay = Math.random() * 3000 + 2000 // 2-5 seconds
+        const delay = Math.random() * 3000 + 2000
         await new Promise(resolve => setTimeout(resolve, delay))
         showToast('RF ID recognized!', 'success')
-        
+  
       } else if (method === 'scan-qr') {
-        // Scan QR - show camera feed for 2 seconds, then recognize
+        // Scan QR - open back camera
         setShowCamera(true)
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" } } // Use back camera
+          })
           setCameraStream(stream)
-          showToast('Camera opened - scanning for QR code...', 'info')
-          
-          // Show camera for 2 seconds
+          showToast('Back camera opened - scanning for QR code...', 'info')
+  
           await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          // Stop camera and show recognizing
+  
           stream.getTracks().forEach(track => track.stop())
           setShowCamera(false)
           setCameraStream(null)
-          
+  
           setIsRecognizing(true)
-          const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+          const delay = Math.random() * 2000 + 1000
           await new Promise(resolve => setTimeout(resolve, delay))
           showToast('QR Code scanned successfully!', 'success')
-          
+  
         } catch (err) {
           setShowCamera(false)
           setCameraStream(null)
           showToast('Camera access denied or not available', 'error')
           return
         }
-        
+  
       } else if (method === 'show-qr') {
-        // Show QR - generate and display QR code for 2 seconds
         const generatedQrData = `nammakoda:${Date.now()}:${Math.random().toString(36).substr(2, 9)}`
         setQrData(generatedQrData)
         setShowQRCode(true)
         showToast('QR Code generated!', 'info')
-        
-        // Show QR for 2 seconds
+  
         await new Promise(resolve => setTimeout(resolve, 2000))
         setShowQRCode(false)
         setQrData('')
-        
-        // Then show recognizing
+  
         setIsRecognizing(true)
-        const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+        const delay = Math.random() * 2000 + 1000
         await new Promise(resolve => setTimeout(resolve, delay))
         showToast('QR Code recognized!', 'success')
-        
+  
       } else if (method === 'camera') {
-        // Camera - show live feed for 2 seconds, then recognize
+        // Camera - use back camera
         setShowCamera(true)
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { exact: "environment" } } // Use back camera
+          })
           setCameraStream(stream)
-          showToast('Camera opened - scanning...', 'info')
-          
-          // Show camera for 2 seconds
+          showToast('Back camera opened - scanning...', 'info')
+  
           await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          // Stop camera and show recognizing
+  
           stream.getTracks().forEach(track => track.stop())
           setShowCamera(false)
           setCameraStream(null)
-          
+  
           setIsRecognizing(true)
-          const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+          const delay = Math.random() * 2000 + 1000
           await new Promise(resolve => setTimeout(resolve, delay))
           showToast('Camera scan completed!', 'success')
-          
+  
         } catch (err) {
           setShowCamera(false)
           setCameraStream(null)
@@ -181,20 +291,19 @@ export default function MapTab(){
           return
         }
       }
-      
-      // Proceed with actual borrow after recognition
+  
       const resp = await walletAPI.borrow(String(selectedStation.id), selectedStation.name)
-      const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now()+2*60*60*1000).getTime()
+      const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now() + 2 * 60 * 60 * 1000).getTime()
       localStorage.setItem('borrowedUntil', String(dueTs))
       setBorrowed(true)
       showToast('Borrow started. Timer will appear on Home.', 'success')
-      
-    } catch(err){
+  
+    } catch (err) {
       const status = err?.response?.status
       const msg = err?.response?.data?.error
-      if(status===409){
+      if (status === 409) {
         showToast(msg || 'You already have an active borrow. Return from Home tab.', 'error')
-      } else if(status===402){
+      } else if (status === 402) {
         showToast(msg || 'Insufficient balance (need 50 coins).', 'error')
       } else {
         showToast(msg || 'Borrow failed', 'error')
@@ -208,6 +317,7 @@ export default function MapTab(){
       setQrData('')
     }
   }
+  
   const stations = [
     { id:1, name:'Main Gate', subtitle:'Annai Mira College Entrance', dist:'0.1 km', slots:[{label:'Slot A',status:'borrowed'},{label:'Slot B',status:'borrowed'}]},
     { id:2, name:'Library Block', subtitle:'Central Library', dist:'0.2 km', slots:[{label:'Slot A',status:'available'},{label:'Slot B',status:'available'}]},
