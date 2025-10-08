@@ -19,8 +19,13 @@
       (function(){
         try{
           var t = localStorage.getItem('theme');
-          if(t){ document.documentElement.setAttribute('data-theme', t); }
-        }catch(e){}
+          // Default to light theme if no theme is saved
+          if(!t) t = 'light';
+          document.documentElement.setAttribute('data-theme', t);
+        }catch(e){
+          // Fallback to light theme
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
       })();
     </script>
   </head>

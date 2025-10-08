@@ -16,7 +16,9 @@ export default function HomeTab(){
   
   useEffect(()=>{
     const saved = localStorage.getItem('theme')
-    if(saved){ document.documentElement.setAttribute('data-theme', saved) }
+    // Default to light theme if no theme is saved
+    const theme = saved || 'light'
+    document.documentElement.setAttribute('data-theme', theme)
   },[])
 
   useEffect(()=>{
@@ -90,6 +92,26 @@ export default function HomeTab(){
         <div className="absolute top-3 right-4 text-sm opacity-95 font-semibold">
           {weather.temperatureC !== null ? `${weather.temperatureC}°C` : '—'}
         </div>
+        {/* Sun animation for sunny weather */}
+        {weather.condition==='sunny' && (
+          <div className="absolute top-4 right-4 pointer-events-none hidden md:block" aria-hidden="true">
+            <div className="sun-animation">
+              <svg width="60" height="60" viewBox="0 0 24 24" className="text-yellow-400 animate-spin" style={{animationDuration: '20s'}}>
+                <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.8"/>
+                <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        )}
         {weather.condition==='rainy' && (
           <div className="rain hidden md:block" aria-hidden="true">
             {Array.from({length: 80}).map((_, i)=> {

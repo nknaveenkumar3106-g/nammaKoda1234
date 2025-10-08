@@ -16,9 +16,9 @@ export function WeatherProvider({ children }){
         const rain = data?.current?.rain || 0
         const precip = data?.current?.precipitation || 0
         const code = data?.current?.weathercode
-        const isRainy = (rain > 0.05) || (precip > 0.05) || [51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)
-        const isSunny = [0,1].includes(code)
-        const condition = isRainy ? 'rainy' : (isSunny ? 'sunny' : 'cloudy')
+        // Simplified weather logic: rain only for temp < 18°C, sunny otherwise
+        const isRainy = temp < 18
+        const condition = isRainy ? 'rainy' : 'sunny'
         if(!cancelled) setState({ condition, temperatureC: typeof temp==='number' ? Math.round(temp) : null })
       } catch {
         if(!cancelled) setState((s)=>({ ...s }))

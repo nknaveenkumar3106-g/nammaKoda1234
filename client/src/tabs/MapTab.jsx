@@ -7,6 +7,13 @@ import AdPlaceholder from '../components/AdPlaceholder.jsx'
 export default function MapTab(){
   const mapRef = useRef(null)
   const CENTER = [12.9406, 79.3211] // Annai Mira College exact
+  const [showBorrowOptions, setShowBorrowOptions] = useState(false)
+  const [selectedStation, setSelectedStation] = useState(null)
+  const [isRecognizing, setIsRecognizing] = useState(false)
+  const [showQRCode, setShowQRCode] = useState(false)
+  const [qrData, setQrData] = useState('')
+  const [showCamera, setShowCamera] = useState(false)
+  const [cameraStream, setCameraStream] = useState(null)
 
   useEffect(()=>{
     async function ensureLeaflet(){
@@ -84,6 +91,123 @@ export default function MapTab(){
       }catch{}
     })()
   },[])
+
+  // Handle borrow method selection
+  const handleBorrowMethod = async (method) => {
+    if (!selectedStation) return
+    
+    setShowBorrowOptions(false)
+    
+    try {
+      // Handle different methods with specific flows
+      if (method === 'rfid') {
+        // RF ID - just show recognizing
+        setIsRecognizing(true)
+        const delay = Math.random() * 3000 + 2000 // 2-5 seconds
+        await new Promise(resolve => setTimeout(resolve, delay))
+        showToast('RF ID recognized!', 'success')
+        
+      } else if (method === 'scan-qr') {
+        // Scan QR - show camera feed for 2 seconds, then recognize
+        setShowCamera(true)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          setCameraStream(stream)
+          showToast('Camera opened - scanning for QR code...', 'info')
+          
+          // Show camera for 2 seconds
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          // Stop camera and show recognizing
+          stream.getTracks().forEach(track => track.stop())
+          setShowCamera(false)
+          setCameraStream(null)
+          
+          setIsRecognizing(true)
+          const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+          await new Promise(resolve => setTimeout(resolve, delay))
+          showToast('QR Code scanned successfully!', 'success')
+          
+        } catch (err) {
+          setShowCamera(false)
+          setCameraStream(null)
+          showToast('Camera access denied or not available', 'error')
+          return
+        }
+        
+      } else if (method === 'show-qr') {
+        // Show QR - generate and display QR code for 2 seconds
+        const generatedQrData = `nammakoda:${Date.now()}:${Math.random().toString(36).substr(2, 9)}`
+        setQrData(generatedQrData)
+        setShowQRCode(true)
+        showToast('QR Code generated!', 'info')
+        
+        // Show QR for 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        setShowQRCode(false)
+        setQrData('')
+        
+        // Then show recognizing
+        setIsRecognizing(true)
+        const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+        await new Promise(resolve => setTimeout(resolve, delay))
+        showToast('QR Code recognized!', 'success')
+        
+      } else if (method === 'camera') {
+        // Camera - show live feed for 2 seconds, then recognize
+        setShowCamera(true)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          setCameraStream(stream)
+          showToast('Camera opened - scanning...', 'info')
+          
+          // Show camera for 2 seconds
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          // Stop camera and show recognizing
+          stream.getTracks().forEach(track => track.stop())
+          setShowCamera(false)
+          setCameraStream(null)
+          
+          setIsRecognizing(true)
+          const delay = Math.random() * 2000 + 1000 // 1-3 seconds for recognition
+          await new Promise(resolve => setTimeout(resolve, delay))
+          showToast('Camera scan completed!', 'success')
+          
+        } catch (err) {
+          setShowCamera(false)
+          setCameraStream(null)
+          showToast('Camera access denied or not available', 'error')
+          return
+        }
+      }
+      
+      // Proceed with actual borrow after recognition
+      const resp = await walletAPI.borrow(String(selectedStation.id), selectedStation.name)
+      const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now()+2*60*60*1000).getTime()
+      localStorage.setItem('borrowedUntil', String(dueTs))
+      setBorrowed(true)
+      showToast('Borrow started. Timer will appear on Home.', 'success')
+      
+    } catch(err){
+      const status = err?.response?.status
+      const msg = err?.response?.data?.error
+      if(status===409){
+        showToast(msg || 'You already have an active borrow. Return from Home tab.', 'error')
+      } else if(status===402){
+        showToast(msg || 'Insufficient balance (need 50 coins).', 'error')
+      } else {
+        showToast(msg || 'Borrow failed', 'error')
+      }
+    } finally {
+      setIsRecognizing(false)
+      setSelectedStation(null)
+      setShowCamera(false)
+      setCameraStream(null)
+      setShowQRCode(false)
+      setQrData('')
+    }
+  }
   const stations = [
     { id:1, name:'Main Gate', subtitle:'Annai Mira College Entrance', dist:'0.1 km', slots:[{label:'Slot A',status:'borrowed'},{label:'Slot B',status:'borrowed'}]},
     { id:2, name:'Library Block', subtitle:'Central Library', dist:'0.2 km', slots:[{label:'Slot A',status:'available'},{label:'Slot B',status:'available'}]},
@@ -145,25 +269,12 @@ export default function MapTab(){
               </div>
               <div className={`mt-3 text-sm ${availableCount>0 ? 'text-green-600' : 'text-red-500'}`}>{availableCount} available</div>
               <div className="mt-3 flex items-center gap-2">
-                <button className="btn btn-primary btn-sm" disabled={!canBorrow} onClick={async ()=>{
-                  try{
-                    const resp = await walletAPI.borrow(String(s.id), s.name)
-                    const dueTs = new Date(resp.currentBorrow?.dueAt || Date.now()+2*60*60*1000).getTime()
-                    localStorage.setItem('borrowedUntil', String(dueTs))
-                    setBorrowed(true)
-                    showToast('Borrow started. Timer will appear on Home.', 'success')
-                  }catch(err){
-                    const status = err?.response?.status
-                    const msg = err?.response?.data?.error
-                    if(status===409){
-                      showToast(msg || 'You already have an active borrow. Return from Home tab.', 'error')
-                    } else if(status===402){
-                      showToast(msg || 'Insufficient balance (need 50 coins).', 'error')
-                    } else {
-                      showToast(msg || 'Borrow failed', 'error')
-                    }
-                  }
-                }}>Borrow from here</button>
+                <button className="btn btn-primary btn-sm" disabled={!canBorrow || isRecognizing} onClick={()=>{
+                  setSelectedStation(s)
+                  setShowBorrowOptions(true)
+                }}>
+                  {isRecognizing ? 'Recognizing...' : 'Borrow from here'}
+                </button>
                 {borrowed && <span className="badge badge-warning">Borrow active</span>}
               </div>
             </div>
@@ -183,6 +294,174 @@ export default function MapTab(){
       </div>
 
       <AdPlaceholder />
+
+      {/* Borrow Options Modal */}
+      {showBorrowOptions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold">Choose Borrow Method</h3>
+              <p className="text-sm opacity-70 mt-1">Select how you want to borrow from {selectedStation?.name}</p>
+            </div>
+            
+            <div className="space-y-3">
+              <button 
+                className="w-full btn btn-outline justify-start gap-3"
+                onClick={() => handleBorrowMethod('rfid')}
+              >
+                <span className="text-2xl">💳</span>
+                <div className="text-left">
+                  <div className="font-semibold">Tap your RF ID card</div>
+                  <div className="text-xs opacity-70">Hold your card near the reader</div>
+                </div>
+              </button>
+              
+              <button 
+                className="w-full btn btn-outline justify-start gap-3"
+                onClick={() => handleBorrowMethod('scan-qr')}
+              >
+                <span className="text-2xl">📱</span>
+                <div className="text-left">
+                  <div className="font-semibold">Scan QR code from ID Card</div>
+                  <div className="text-xs opacity-70">Point camera at your ID card QR</div>
+                </div>
+              </button>
+              
+              <button 
+                className="w-full btn btn-outline justify-start gap-3"
+                onClick={() => handleBorrowMethod('show-qr')}
+              >
+                <span className="text-2xl">📄</span>
+                <div className="text-left">
+                  <div className="font-semibold">Show QR Code</div>
+                  <div className="text-xs opacity-70">Display your personal QR code</div>
+                </div>
+              </button>
+              
+              <button 
+                className="w-full btn btn-outline justify-start gap-3"
+                onClick={() => handleBorrowMethod('camera')}
+              >
+                <span className="text-2xl">📷</span>
+                <div className="text-left">
+                  <div className="font-semibold">Open camera to scan QR</div>
+                  <div className="text-xs opacity-70">Use camera to scan station QR</div>
+                </div>
+              </button>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button 
+                className="btn btn-ghost flex-1"
+                onClick={() => {
+                  setShowBorrowOptions(false)
+                  setSelectedStation(null)
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recognition Overlay */}
+      {isRecognizing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <h3 className="text-lg font-bold mb-2">Recognizing...</h3>
+            <p className="text-sm opacity-70">Please wait while we process your request</p>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Display Overlay */}
+      {showQRCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 text-center max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Your QR Code</h3>
+            <div className="bg-gray-100 p-4 rounded-lg mb-4">
+              {/* Simple QR code representation using CSS */}
+              <div className="grid grid-cols-8 gap-1 mx-auto w-48 h-48 bg-white p-2">
+                {Array.from({length: 64}).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`w-full h-full ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`}
+                    style={{animationDelay: `${i * 10}ms`}}
+                  ></div>
+                ))}
+              </div>
+            </div>
+            <p className="text-sm opacity-70 mb-2">QR Code Data:</p>
+            <p className="text-xs font-mono bg-gray-100 p-2 rounded break-all">{qrData}</p>
+            <div className="mt-4">
+              <div className="animate-pulse text-blue-600">Displaying QR Code...</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Feed Overlay */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-bold mb-2">📷 Camera Scanner</h3>
+              <p className="text-sm opacity-70">Position QR code within the frame</p>
+            </div>
+            
+            {/* Small square camera view */}
+            <div className="relative w-64 h-64 mx-auto bg-black rounded-lg overflow-hidden">
+              <video 
+                ref={(video) => {
+                  if (video && cameraStream) {
+                    video.srcObject = cameraStream
+                    video.play()
+                  }
+                }}
+                autoPlay 
+                playsInline 
+                muted
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Scanning overlay with corner brackets */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative w-48 h-48">
+                  {/* Corner brackets for scanning area */}
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400"></div>
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400"></div>
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400"></div>
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400"></div>
+                  
+                  {/* Scanning line animation */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-full h-0.5 bg-green-400 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status indicators */}
+              <div className="absolute top-2 left-2 right-2 flex justify-between">
+                <div className="bg-red-500 text-white px-2 py-1 rounded text-xs animate-pulse">
+                  ● REC
+                </div>
+                <div className="bg-green-500 text-white px-2 py-1 rounded text-xs">
+                  Live
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-center">
+              <div className="animate-pulse text-green-600 text-sm font-semibold mb-1">
+                Scanning for QR code...
+              </div>
+              <div className="text-xs opacity-70">Hold steady for 2 seconds</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
