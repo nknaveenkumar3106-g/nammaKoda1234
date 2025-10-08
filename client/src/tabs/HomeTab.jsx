@@ -83,7 +83,19 @@ export default function HomeTab(){
   return (
     <div className={`relative min-h-[70vh] w-full flex items-center justify-center ${heroClass} p-4 rounded-box`}>
       <CornerLogo />
-      <div className="glass-strong w-full max-w-3xl md:max-w-5xl p-6 md:p-8 rounded-2xl text-center space-y-6 relative overflow-hidden">
+      <div className="glass-strong w-full max-w-3xl md:max-w-5xl p-6 md:p-8 rounded-2xl text-center space-y-6 relative">
+        
+        {/* Desktop side ads - positioned on either side inside the glass container */}
+        <div className="hidden lg:block absolute -left-80 top-0 bottom-0 w-80 h-screen z-10">
+          <div className="m-7 h-full bg-white border-2 border-black rounded-lg shadow-lg">
+            <AdPlaceholder />
+          </div>
+        </div>
+        <div className="hidden lg:block absolute -right-80 top-0 bottom-0 w-80 h-screen z-10">
+          <div className="m-7 h-full bg-white border-2 border-black rounded-lg shadow-lg">
+            <AdPlaceholder />
+          </div>
+        </div>
         <div className="umbrella-bg" aria-hidden="true">
           <svg width="280" height="280" viewBox="0 0 24 24" className="text-black">
             <path d="M12 2C7 2 3 6 3 11h18c0-5-4-9-9-9Zm0 0v9m0 0v7a3 3 0 1 0 6 0h-2a1 1 0 1 1-2 0v-7" stroke="currentColor" strokeWidth="1.2" fill="black" />

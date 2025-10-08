@@ -32,9 +32,9 @@ export default function AdPlaceholder({ className = "" }) {
   const allFailed = attempts >= ads.length
 
   return (
-    <div className={`glass-strong rounded-2xl p-4 ${className}`}>
+    <div className={` h-full flex items-center justify-center p-4 ${className}`}>
       <div className="text-center">
-        <div className="text-xs opacity-60 mb-2">Advertisement</div>
+        <div className="text-sm font-semibold text-gray-700 mb-4">Advertisement</div>
         <div className="relative overflow-hidden rounded-lg bg-base-100">
           {!allFailed ? (
             <img
@@ -47,11 +47,9 @@ export default function AdPlaceholder({ className = "" }) {
               }}
             />
           ) : (
-            <div className="w-full h-32 md:h-48 lg:h-56 xl:h-64 grid place-items-center relative">
-              <div className="text-[10px] md:text-xs opacity-70 absolute top-2 right-3">display ads will be displayed here</div>
+            <div className="w-full h-full grid place-items-center relative">
               <div className="flex flex-col items-center justify-center">
-                <img src={`${base}logo.png`} alt="nammaKoda logo" className="h-10 md:h-14 object-contain opacity-90" />
-                <div className="mt-1 text-sm md:text-base font-semibold opacity-90">Avoid rain or shine</div>
+                <div className="text-2xl md:text-3xl font-bold opacity-90 mb-2">Advertisement</div>
               </div>
             </div>
           )}
